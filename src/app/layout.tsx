@@ -1,30 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Inter_Tight } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "vietnamese"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// Substitute for PolySans (see DESIGN.md): weight 400 only
+const polysans = Inter_Tight({
+  variable: "--font-polysans",
+  subsets: ["latin", "vietnamese"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
-  title: "UII Web",
-  description: "UII web application",
+  title: "UII",
+  description: "Giám sát và cảnh báo sớm cho người có nguy cơ động kinh",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="vi" className={`${inter.variable} ${polysans.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col bg-canvas-white text-graphite">
         {children}
         <Toaster />
       </body>
