@@ -7,6 +7,9 @@ services:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     env_file: .env
+    # Lets the container reach a gateway (9router) running on the Docker host via host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:${WEB_PORT:-3000}:3000"
     restart: unless-stopped
