@@ -2,8 +2,10 @@ import { auth } from "@/auth";
 
 export const proxy = auth((req) => {
   if (!req.auth) {
-    return Response.redirect(new URL("/login", req.nextUrl));
+    const login = new URL("/login", req.nextUrl);
+    login.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
+    return Response.redirect(login);
   }
 });
 
-export const config = { matcher: ["/dashboard/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/circle/:path*", "/reports/:path*", "/alerts/:path*", "/devices/:path*", "/profile/:path*", "/settings/:path*"] };
