@@ -3,15 +3,15 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent font-heading text-base font-normal tracking-[-0.02em] whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-none border font-heading text-base font-normal tracking-[-0.02em] whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-graphite text-white hover:bg-steel",
+        default: "border-transparent bg-graphite text-white hover:bg-steel",
         outline: "border-graphite bg-transparent text-graphite hover:bg-ash",
-        secondary: "bg-ash text-graphite hover:bg-mist",
-        ghost: "text-graphite hover:bg-ash",
-        link: "text-graphite underline decoration-ember-orange decoration-1 underline-offset-[3px]",
+        secondary: "border-transparent bg-ash text-graphite hover:bg-mist",
+        ghost: "border-transparent text-graphite hover:bg-ash",
+        link: "border-transparent text-graphite underline decoration-ember-orange decoration-1 underline-offset-[3px]",
       },
       size: {
         default: "h-11 gap-2 px-5",

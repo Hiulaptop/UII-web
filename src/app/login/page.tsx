@@ -7,9 +7,11 @@ type Props = {
 };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const [{ error, callbackUrl }, session] = await Promise.all([searchParams, auth()]);
+  const [{ error, callbackUrl: rawCallback }, session] = await Promise.all([searchParams, auth()]);
+  // Only same-site paths: blocks open redirects such as //evil.com or https://evil.com.
+  const callbackUrl = rawCallback && /^\/(?![/\\])/.test(rawCallback) ? rawCallback : "/dashboard";
   // Sessions created before the users table existed lack an id; make them sign in again.
-  if (session?.user?.id) redirect("/dashboard");
+  if (session?.user?.id) redirect(callbackUrl);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,7 +47,7 @@ export default async function LoginPage({ searchParams }: Props) {
             className="mt-[36px]"
             action={async () => {
               "use server";
-              await signIn("google", { redirectTo: callbackUrl ?? "/dashboard" });
+              await signIn("google", { redirectTo: callbackUrl });
             }}
           >
             <Button type="submit" size="lg" className="w-full">

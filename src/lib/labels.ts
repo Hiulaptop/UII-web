@@ -36,3 +36,6 @@ export const memberStatusLabel: Record<MemberStatus, string> = {
   active: "Đang hoạt động",
   removed: "Đã rời",
 };
+
+export const historyLabel = (days: number | null) =>
+  days === null ? "Toàn bộ lịch sử" : days === 0 ? "Chỉ từ khi chấp nhận" : `${days} ngày gần nhất`;

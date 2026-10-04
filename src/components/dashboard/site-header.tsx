@@ -1,17 +1,21 @@
 import Link from "next/link";
 import { signOut } from "@/auth";
+import { LiveAlerts } from "@/components/dashboard/live-alerts";
 import { Button } from "@/components/ui/button";
 
 const nav = [
   { href: "/dashboard", label: "Tổng quan" },
-  { href: "/dashboard#alerts", label: "Cảnh báo" },
-  { href: "/dashboard#sos", label: "Hồ sơ SOS" },
-  { href: "/dashboard#circle", label: "Circle" },
+  { href: "/alerts", label: "Cảnh báo" },
+  { href: "/reports", label: "Báo cáo" },
+  { href: "/profile", label: "Hồ sơ SOS" },
+  { href: "/circle", label: "Circle" },
+  { href: "/devices", label: "Thiết bị" },
 ];
 
 export function SiteHeader({ userName }: { userName?: string | null }) {
   return (
     <header className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-4 px-5 py-6">
+      <LiveAlerts />
       <Link href="/dashboard" className="font-heading text-2xl tracking-[-0.02em]">
         UII
       </Link>
@@ -29,7 +33,11 @@ export function SiteHeader({ userName }: { userName?: string | null }) {
       </nav>
 
       <div className="flex items-center gap-5">
-        {userName && <span className="hidden text-sm text-slate sm:inline">{userName}</span>}
+        {userName && (
+          <Link href="/settings" className="hidden text-sm text-slate hover:text-graphite sm:inline" aria-label="Cài đặt tài khoản">
+            {userName}
+          </Link>
+        )}
         <form
           action={async () => {
             "use server";

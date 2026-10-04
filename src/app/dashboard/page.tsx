@@ -1,13 +1,17 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { Button } from "@/components/ui/button";
+import { acceptInviteAction, declineInviteAction } from "@/app/invite/actions";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { HeartRateChart } from "@/components/dashboard/heart-rate-chart";
 import { SiteHeader } from "@/components/dashboard/site-header";
 import { getDashboard, HEART_RATE_THRESHOLD } from "@/lib/dashboard";
+import { listPendingForEmail } from "@/lib/invites";
 import {
   alertStatusLabel,
   alertTypeLabel,
   circleRoleLabel,
+  historyLabel,
   memberStatusLabel,
   severityLabel,
   type AlertSeverity,
@@ -44,11 +48,19 @@ const severityClass: Record<AlertSeverity, string> = {
 const h2 = "font-heading text-[32px] leading-[1.19] tracking-[-0.02em]";
 const featureCard = "scroll-mt-5 rounded-[6px_0_0_0] bg-canvas-white p-8 md:pt-[70px] md:pl-[60px] md:pr-10 md:pb-10";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ invite_error?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const d = await getDashboard(session.user.id);
+  const { invite_error: inviteError } = await searchParams;
+  const [d, pendingInvites] = await Promise.all([
+    getDashboard(session.user.id),
+    session.user.email ? listPendingForEmail(session.user.email) : Promise.resolve([]),
+  ]);
   const firstName = session.user.name?.split(" ").at(-1) ?? "bạn";
   const subjectName = d.profile?.full_name ?? d.subject.name ?? d.subject.email;
   const hr = d.heartRate;
@@ -58,6 +70,42 @@ export default async function DashboardPage() {
       <SiteHeader userName={session.user.name} />
 
       <main className="flex-1">
+        {(pendingInvites.length > 0 || inviteError) && (
+          <section aria-label="Lời mời" className="mx-auto w-full max-w-[1200px] space-y-5 px-5 pt-5">
+            {inviteError && (
+              <p role="alert" className="text-sm underline decoration-ember-orange decoration-1 underline-offset-[3px]">
+                {inviteError}
+              </p>
+            )}
+            {pendingInvites.map(({ invite, subjectName: from }) => (
+              <div
+                key={invite.id}
+                className="flex flex-col gap-5 rounded-[6px_0_0_0] bg-ivory p-8 md:flex-row md:items-center md:justify-between"
+              >
+                <div>
+                  <p className="font-heading text-[13px] tracking-[-0.02em] text-brass">Lời mời vào circle</p>
+                  <p className="mt-2 font-heading text-[32px] leading-[1.19] tracking-[-0.02em]">{from} mời bạn theo dõi</p>
+                  <p className="mt-2 text-sm text-steel">
+                    {circleRoleLabel[invite.role]} · {historyLabel(invite.history_days)}
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <form action={acceptInviteAction}>
+                    <input type="hidden" name="inviteId" value={invite.id} />
+                    <Button type="submit">Chấp nhận</Button>
+                  </form>
+                  <form action={declineInviteAction}>
+                    <input type="hidden" name="inviteId" value={invite.id} />
+                    <Button type="submit" variant="outline">
+                      Từ chối
+                    </Button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
         {/* Hero */}
         <section className="mx-auto w-full max-w-[1200px] px-5 pt-10 pb-[80px]">
           <p className="font-heading text-[13px] tracking-[-0.02em] text-brass">
@@ -101,7 +149,9 @@ export default async function DashboardPage() {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Button>Xác nhận</Button>
+                <Link href={`/alerts/${d.openAlert.id}`} className={buttonVariants()}>
+                  Xem và xác nhận
+                </Link>
                 {d.contact && (
                   <a
                     href={`tel:${d.contact.phone.replace(/\s/g, "")}`}
@@ -235,8 +285,14 @@ export default async function DashboardPage() {
               )}
               {d.isSelf && (
                 <div className="mt-10 flex flex-wrap gap-3">
-                  <Button variant="outline">{d.profile ? "Chỉnh sửa hồ sơ" : "Tạo hồ sơ SOS"}</Button>
-                  {d.profile && <Button variant="ghost">Tạo mã QR SOS</Button>}
+                  <Link href="/profile" className={buttonVariants({ variant: "outline" })}>
+                    {d.profile ? "Chỉnh sửa hồ sơ" : "Tạo hồ sơ SOS"}
+                  </Link>
+                  {d.profile && (
+                    <Link href="/profile/qr" className={buttonVariants({ variant: "ghost" })}>
+                      Tạo mã QR SOS
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
@@ -269,7 +325,9 @@ export default async function DashboardPage() {
               )}
               {d.isSelf && (
                 <div className="mt-10">
-                  <Button>Mời người thân</Button>
+                  <Link href="/circle" className={buttonVariants()}>
+                    Quản lý & mời người thân
+                  </Link>
                 </div>
               )}
             </div>

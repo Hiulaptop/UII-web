@@ -34,21 +34,25 @@ function unwrap<T>(res: { data: T | null; error: { message: string } | null }): 
 }
 
 // Wearer: show own data. Guardian without a device: show the first person they monitor.
-async function resolveSubjectId(userId: string) {
+// historyFrom is the oldest timestamp a guardian may see (null = no limit). Wearers are never limited.
+export async function resolveSubject(userId: string): Promise<{ subjectId: string; historyFrom: string | null }> {
   const db = supabaseAdmin();
   const [devices, memberships] = await Promise.all([
     db.from("devices").select("id").eq("user_id", userId).limit(1),
     db
       .from("circle_members")
-      .select("circles!inner(subject_id)")
+      .select("history_from, circles!inner(subject_id)")
       .eq("user_id", userId)
       .eq("status", "active")
       .neq("circles.subject_id", userId)
+      .order("joined_at")
       .limit(1),
   ]);
-  if (unwrap(devices)?.length) return userId;
-  const circle = unwrap(memberships)?.[0]?.circles as unknown as { subject_id: string } | undefined;
-  return circle?.subject_id ?? userId;
+  if (unwrap(devices)?.length) return { subjectId: userId, historyFrom: null };
+  const m = unwrap(memberships)?.[0] as unknown as
+    | { history_from: string | null; circles: { subject_id: string } }
+    | undefined;
+  return m ? { subjectId: m.circles.subject_id, historyFrom: m.history_from } : { subjectId: userId, historyFrom: null };
 }
 
 function downsample(values: number[], points: number) {
@@ -62,10 +66,11 @@ function downsample(values: number[], points: number) {
 
 export async function getDashboard(userId: string) {
   const db = supabaseAdmin();
-  const subjectId = await resolveSubjectId(userId);
+  const { subjectId, historyFrom } = await resolveSubject(userId);
   const now = Date.now();
-  const since7d = new Date(now - 7 * DAY_MS).toISOString();
-  const since24h = new Date(now - DAY_MS).toISOString();
+  const floor = historyFrom ?? "1970-01-01T00:00:00Z";
+  const since7d = new Date(Math.max(now - 7 * DAY_MS, Date.parse(floor))).toISOString();
+  const since24h = new Date(Math.max(now - DAY_MS, Date.parse(floor))).toISOString();
 
   const [subjectRes, profileRes, medsRes, contactRes, devicesRes, alertsRes, count7dRes, openRes, circleRes] =
     await Promise.all([
@@ -74,9 +79,9 @@ export async function getDashboard(userId: string) {
       db.from("medications").select("name, dosage, schedule").eq("user_id", subjectId).order("created_at"),
       db.from("emergency_contacts").select("name, relation, phone").eq("user_id", subjectId).order("priority").limit(1).maybeSingle(),
       db.from("devices").select("id, name, model, battery_pct, last_seen_at").eq("user_id", subjectId).order("last_seen_at", { ascending: false, nullsFirst: false }),
-      db.from("alerts").select("id, type, severity, status, detected_at, lat, lng, note, metrics").eq("subject_id", subjectId).order("detected_at", { ascending: false }).limit(10),
+      db.from("alerts").select("id, type, severity, status, detected_at, lat, lng, note, metrics").eq("subject_id", subjectId).gte("detected_at", floor).order("detected_at", { ascending: false }).limit(10),
       db.from("alerts").select("id", { count: "exact", head: true }).eq("subject_id", subjectId).gte("detected_at", since7d),
-      db.from("alerts").select("id", { count: "exact", head: true }).eq("subject_id", subjectId).eq("status", "open"),
+      db.from("alerts").select("id", { count: "exact", head: true }).eq("subject_id", subjectId).eq("status", "open").gte("detected_at", floor),
       db.from("circles").select("id, name, circle_members(user_id, role, status, users(name, email))").eq("subject_id", subjectId).limit(1).maybeSingle(),
     ]);
 
@@ -120,12 +125,13 @@ export async function getDashboard(userId: string) {
     alerts,
     openAlert: alerts.find((a) => a.status === "open") ?? null,
     heartRate,
-    members,
+    // Other relatives' identities are visible to the wearer only.
+    members: userId === subjectId ? members.filter((m) => m.user_id !== subjectId) : [],
     stats: {
       alerts7d: count7dRes.count ?? 0,
       openAlerts: openRes.count ?? 0,
       avgResponseSec,
-      circleMembers: members.length,
+      circleMembers: members.filter((m) => m.user_id !== subjectId).length,
     },
   };
 }
