@@ -3,7 +3,8 @@
 //
 //   node scripts/watch-sim.mjs pair 4829-1375 [--url http://localhost:3000] [--name "Galaxy Watch"]
 //   node scripts/watch-sim.mjs samples [--minutes 30] [--hr 72]
-//   node scripts/watch-sim.mjs alert fall|seizure|pre_seizure [--manual] [--client-id ID] [--lat 10.77 --lng 106.70]
+//   node scripts/watch-sim.mjs alert fall|seizure|pre_seizure [--manual|--algorithm] [--confidence 0.8] [--client-id ID] [--lat 10.77 --lng 106.70]
+//   node scripts/watch-sim.mjs card
 //   node scripts/watch-sim.mjs status
 //
 // The device token is kept in .watch-sim.json (git-ignored). It is never printed.
@@ -80,9 +81,9 @@ if (cmd === "pair") {
   const body = {
     client_id: typeof o["client-id"] === "string" ? o["client-id"] : `sim-${randomBytes(8).toString("hex")}`,
     type,
-    trigger: o.manual ? "manual" : "device_event",
+    trigger: o.manual ? "manual" : o.algorithm ? "algorithm" : "device_event",
     detected_at: now,
-    confidence: 0.9,
+    confidence: o.confidence !== undefined && o.confidence !== true ? Number(o.confidence) : 0.9,
     metrics: { heart_rate: 118, accel_peak: 31.5 },
     // ten seconds of motion at 50 Hz around the event
     snapshot: { sample_rate_hz: 50, started_at: now - 5000, axes: Array.from({ length: 500 }, (_, i) => [Math.sin(i / 7), Math.cos(i / 9), 9.8 + (i > 250 && i < 275 ? 20 : 0)]) },
@@ -90,8 +91,13 @@ if (cmd === "pair") {
   if (o.lat && o.lng) { body.lat = Number(o.lat); body.lng = Number(o.lng); }
   const r = await call("/api/device/alerts", body, token);
   show(`alert ${body.client_id}`, r);
+} else if (cmd === "card") {
+  const res = await fetch(`${base}/api/device/sos-card`, { headers: { authorization: `Bearer ${needToken()}` } });
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON error page */ }
+  show("card", { status: res.status, data });
 } else if (cmd === "status") {
   console.log(state.token ? `paired to ${base} as device ${state.device_id}` : "not paired");
 } else {
-  console.log("Commands: pair <code> | samples | alert <type> | status");
+  console.log("Commands: pair <code> | samples | alert <type> | card | status");
 }

@@ -66,3 +66,33 @@ test("limits: a contact needs a phone, too many rows are refused, blank rows are
   assert.equal(parseSosForm(form({ ...base, contact_name: Array.from({ length: 6 }, (_, i) => `c${i}`), contact_phone: Array.from({ length: 6 }, () => "0901234567") })).ok, false);
   assert.equal(parseSosForm(form({ ...base, allergies: Array.from({ length: 21 }, (_, i) => `a${i}`).join(",") })).ok, false);
 });
+
+import { toWatchCard, WATCH_CARD_LIMITS } from "../src/lib/sos/watch-card.ts";
+
+test("the watch card has no profile for a wearer who has not made one", () => {
+  assert.equal(toWatchCard({ profile: null, meds: [], contacts: [] }, null), null);
+});
+
+test("the watch card leaves out doctor, hospital, insurance and body measurements", () => {
+  const card = toWatchCard(
+    {
+      profile: {
+        full_name: "An", blood_type: "O+", epilepsy_type: "Tonic-clonic", seizure_notes: "x".repeat(500),
+        allergies: ["Penicillin"], conditions: [],
+        doctor_name: "Dr B", doctor_phone: "0900000000", hospital: "BV", height_cm: 170, weight_kg: 60, insurance_no: "123",
+      },
+      meds: [{ name: "Valproate", dosage: "500mg", schedule: "sáng" }],
+      contacts: Array.from({ length: 5 }, (_, i) => ({ name: `C${i}`, relation: null, phone: "0900000001" })),
+    },
+    27,
+  );
+  assert.equal(card.name, "An");
+  assert.equal(card.age, 27);
+  assert.equal(card.blood_type, "O+");
+  assert.equal(card.seizure_notes.length, WATCH_CARD_LIMITS.notes);
+  assert.equal(card.contacts.length, WATCH_CARD_LIMITS.contacts);
+  assert.deepEqual(card.meds, [{ name: "Valproate", dosage: "500mg" }]);
+  for (const k of ["doctor_name", "doctor_phone", "hospital", "height_cm", "weight_kg", "insurance_no", "sex"]) {
+    assert.ok(!(k in card), `${k} must not be on the watch card`);
+  }
+});
