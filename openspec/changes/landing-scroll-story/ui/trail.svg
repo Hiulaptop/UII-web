@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-label="Minh họa: đường mòn trên sườn núi, mây thấp">
+  <defs>
+    <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dfe8f3"/>
+      <stop offset="1" stop-color="#f5f5f5"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#s2)"/>
+  <path d="M0 330 L160 210 L280 270 L430 140 L560 250 L700 170 L900 280 L900 600 L0 600Z" fill="#9db1d1"/>
+  <path d="M0 420 L120 360 L260 400 L400 320 L560 390 L720 330 L900 380 L900 600 L0 600Z" fill="#5f7fb3"/>
+  <path d="M0 500 L180 450 L340 480 L520 430 L700 470 L900 440 L900 600 L0 600Z" fill="#2c4e8f"/>
+  <path d="M90 600 C 200 520, 300 520, 380 470 S 560 400, 640 360" fill="none" stroke="#ebe6dd" stroke-width="8" stroke-linecap="round"/>
+  <g fill="#fff" opacity=".85">
+    <ellipse cx="200" cy="300" rx="140" ry="24"/>
+    <ellipse cx="320" cy="290" rx="90" ry="20"/>
+    <ellipse cx="680" cy="250" rx="160" ry="26"/>
+    <ellipse cx="780" cy="238" rx="80" ry="18"/>
+  </g>
+  <!-- hiker -->
+  <g transform="translate(560 382)">
+    <circle cx="0" cy="-34" r="9" fill="#202020"/>
+    <path d="M-6 -24 L6 -24 L8 4 L-8 4Z" fill="#f66002"/>
+    <path d="M-6 4 L-12 26 M6 4 L12 26" stroke="#202020" stroke-width="5" stroke-linecap="round"/>
+    <path d="M10 -18 L22 22" stroke="#4d4d4d" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

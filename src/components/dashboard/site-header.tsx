@@ -16,8 +16,8 @@ export function SiteHeader({ userName }: { userName?: string | null }) {
   return (
     <header className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-4 px-5 py-6">
       <LiveAlerts />
-      <Link href="/dashboard" className="font-heading text-2xl tracking-[-0.02em]">
-        UII
+      <Link href="/dashboard" className="font-heading text-2xl font-extrabold uppercase tracking-[0.14em]">
+        Seize Guard
       </Link>
 
       <nav aria-label="Chính" className="order-3 w-full overflow-x-auto md:order-none md:w-auto">

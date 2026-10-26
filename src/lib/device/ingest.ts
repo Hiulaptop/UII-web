@@ -6,8 +6,13 @@ import {
   defaultSeverity,
   sampleSchema,
   timestampOk,
+  LOCATION_WINDOW_MS,
+  MAX_LOCATIONS_PER_ALERT,
   type AlertBody,
+  type LocationBody,
 } from "./schemas";
+import { isBetterFix } from "./location-rule";
+import { publishToCircle } from "@/lib/notify/audience";
 import type { DeviceAuth } from "./auth";
 
 export async function ingestSamples(device: DeviceAuth, rawSamples: unknown[], batteryPct?: number) {
@@ -65,6 +70,8 @@ export async function ingestAlert(device: DeviceAuth, body: AlertBody): Promise<
       detected_at: new Date(body.detected_at).toISOString(),
       lat: body.lat ?? null,
       lng: body.lng ?? null,
+      accuracy_m: body.lat !== undefined ? (body.accuracy_m ?? null) : null,
+      located_at: body.lat !== undefined ? new Date(body.fix_time ?? body.detected_at).toISOString() : null,
       metrics: body.metrics ? { heart_rate: body.metrics.heart_rate, accel_peak: body.metrics.accel_peak } : null,
       client_id: body.client_id,
       trigger: body.trigger,
@@ -84,6 +91,16 @@ export async function ingestAlert(device: DeviceAuth, body: AlertBody): Promise<
   const id = ins.data.id as string;
 
   // Side effects must not undo or hide an alert that is already stored.
+  if (body.lat !== undefined && body.lng !== undefined) {
+    const first = await db.from("alert_locations").insert({
+      alert_id: id,
+      t: new Date(body.fix_time ?? body.detected_at).toISOString(),
+      lat: body.lat,
+      lng: body.lng,
+      accuracy_m: body.accuracy_m ?? null,
+    });
+    if (first.error) console.error("[ingest] first location not stored:", first.error.code);
+  }
   if (body.snapshot) {
     const snap = await db.from("alert_snapshots").insert({
       alert_id: id,
@@ -101,4 +118,54 @@ export async function ingestAlert(device: DeviceAuth, body: AlertBody): Promise<
     console.error("[ingest] fan-out failed:", e instanceof Error ? e.name : typeof e);
   }
   return { ok: true, id, status: "created" };
+}
+
+export type LocationIngestResult = { ok: true; status: "stored" | "ignored" } | { ok: false; error: "not_found" | "bad_timestamp" };
+
+// A later fix of an alert this device sent. Anything past the cap or the incident window is ignored with success, so the
+// watch drops it instead of retrying forever.
+export async function ingestLocation(device: DeviceAuth, body: LocationBody): Promise<LocationIngestResult> {
+  const now = Date.now();
+  if (!timestampOk(body.fix_time, now)) return { ok: false, error: "bad_timestamp" };
+
+  const db = supabaseAdmin();
+  const found = await db
+    .from("alerts")
+    .select("id, subject_id, status, detected_at, accuracy_m, located_at")
+    .eq("device_id", device.deviceId)
+    .eq("client_id", body.client_id)
+    .maybeSingle();
+  if (found.error) throw new Error(found.error.message);
+  if (!found.data) return { ok: false, error: "not_found" };
+  const alert = found.data;
+
+  if (body.fix_time - Date.parse(alert.detected_at as string) > LOCATION_WINDOW_MS) return { ok: true, status: "ignored" };
+
+  const count = await db.from("alert_locations").select("id", { count: "exact", head: true }).eq("alert_id", alert.id);
+  if (count.error) throw new Error(count.error.message);
+  if ((count.count ?? 0) >= MAX_LOCATIONS_PER_ALERT) return { ok: true, status: "ignored" };
+
+  const ins = await db.from("alert_locations").insert({
+    alert_id: alert.id,
+    t: new Date(body.fix_time).toISOString(),
+    lat: body.lat,
+    lng: body.lng,
+    accuracy_m: body.accuracy_m ?? null,
+  });
+  // The watch retries until it gets an answer: the same fix twice is the same fix.
+  if (ins.error) {
+    if (ins.error.code === "23505") return { ok: true, status: "ignored" };
+    throw new Error(ins.error.message);
+  }
+
+  const current = alert.located_at ? { t: Date.parse(alert.located_at as string), accuracy: (alert.accuracy_m as number | null) ?? null } : null;
+  if (isBetterFix({ t: body.fix_time, accuracy: body.accuracy_m ?? null }, current)) {
+    const upd = await db
+      .from("alerts")
+      .update({ lat: body.lat, lng: body.lng, accuracy_m: body.accuracy_m ?? null, located_at: new Date(body.fix_time).toISOString() })
+      .eq("id", alert.id);
+    if (upd.error) throw new Error(upd.error.message);
+  }
+  publishToCircle(alert.subject_id as string, { kind: "alert_updated", alertId: alert.id as string, status: alert.status as string }).catch(() => {});
+  return { ok: true, status: "stored" };
 }

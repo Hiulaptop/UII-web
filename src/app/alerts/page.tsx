@@ -16,7 +16,7 @@ const severityClass: Record<AlertSeverity, string> = {
   low: "bg-fog text-steel",
   medium: "bg-mist text-graphite",
   high: "bg-ivory text-brass",
-  critical: "bg-graphite text-white",
+  critical: "bg-alarm text-graphite",
 };
 
 type SP = { type?: string; status?: string; page?: string };

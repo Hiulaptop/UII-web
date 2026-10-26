@@ -56,7 +56,7 @@ export function DeleteAccount({ email }: { email: string }) {
         <Button type="submit" variant="outline" disabled={!matches || pending}>{pending ? "Đang xóa…" : "Xóa vĩnh viễn"}</Button>
         <Button type="button" variant="ghost" onClick={() => { setOpen(false); setTyped(""); setError(null); }}>Hủy</Button>
       </div>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-sm text-emergency">{error}</p>}
     </form>
   );
 }

@@ -17,7 +17,7 @@ const severityClass: Record<AlertSeverity, string> = {
   low: "bg-fog text-steel",
   medium: "bg-mist text-graphite",
   high: "bg-ivory text-brass",
-  critical: "bg-graphite text-white",
+  critical: "bg-alarm text-graphite",
 };
 const failText: Record<string, string> = {
   ai_not_configured: "Dịch vụ AI chưa được cấu hình. Hãy báo quản trị viên.",

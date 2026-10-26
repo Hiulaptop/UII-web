@@ -150,3 +150,32 @@ test("multiple channels produce one row each, without duplicates; empty channels
   assert.deepEqual(r.filter((x) => x.user_id === "u1").map((x) => x.channel).sort(), ["email", "push"]);
   assert.deepEqual(r.filter((x) => x.user_id === "u2"), [{ user_id: "u2", channel: "push" }]);
 });
+
+import { locationBodySchema } from "../src/lib/device/schemas.ts";
+import { isBetterFix } from "../src/lib/device/location-rule.ts";
+
+test("an alert may carry a position, but only as a pair", () => {
+  const base = { client_id: "w-12345678", type: "fall", detected_at: Date.now() };
+  assert.ok(alertBodySchema.safeParse({ ...base, lat: 10.77, lng: 106.69, accuracy_m: 12, fix_time: Date.now() }).success);
+  assert.ok(alertBodySchema.safeParse(base).success);
+  assert.ok(!alertBodySchema.safeParse({ ...base, lat: 10.77 }).success);
+  assert.ok(!alertBodySchema.safeParse({ ...base, lat: 91, lng: 0 }).success);
+  assert.ok(!alertBodySchema.safeParse({ ...base, lat: 1, lng: 1, accuracy_m: -1 }).success);
+});
+
+test("a later fix needs the alert id, a position and the time it was measured", () => {
+  const ok = { client_id: "w-12345678", lat: 10.77, lng: 106.69, accuracy_m: 20, fix_time: Date.now() };
+  assert.ok(locationBodySchema.safeParse(ok).success);
+  assert.ok(!locationBodySchema.safeParse({ ...ok, fix_time: undefined }).success);
+  assert.ok(!locationBodySchema.safeParse({ ...ok, lng: 181 }).success);
+  assert.ok(!locationBodySchema.safeParse({ ...ok, extra: 1 }).success);
+});
+
+test("the newer fix wins, and for the same moment the more accurate one", () => {
+  assert.equal(isBetterFix({ t: 1, accuracy: null }, null), true);
+  assert.equal(isBetterFix({ t: 2, accuracy: 500 }, { t: 1, accuracy: 5 }), true);
+  assert.equal(isBetterFix({ t: 1, accuracy: 500 }, { t: 2, accuracy: 5 }), false);
+  assert.equal(isBetterFix({ t: 2, accuracy: 10 }, { t: 2, accuracy: 50 }), true);
+  assert.equal(isBetterFix({ t: 2, accuracy: 50 }, { t: 2, accuracy: 10 }), false);
+  assert.equal(isBetterFix({ t: 2, accuracy: null }, { t: 2, accuracy: 10 }), false);
+});

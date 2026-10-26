@@ -37,7 +37,7 @@ export default async function MedicationsPage({ searchParams }: { searchParams: 
         <section className="bg-ash py-[60px]">
           <div className="mx-auto w-full max-w-[1200px] space-y-5 px-5">
             {sync === "failed" && (
-              <p role="alert" className="rounded-[12px] bg-canvas-white px-5 py-3 text-sm text-red-700">
+              <p role="alert" className="rounded-[12px] bg-canvas-white px-5 py-3 text-sm text-emergency">
                 Đã lưu lịch, nhưng chưa đồng bộ được Google Calendar. <Link href="/settings/google" className="underline">Xem kết nối</Link>
               </p>
             )}

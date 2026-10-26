@@ -50,10 +50,12 @@ export async function listAlerts(p: { subjectId: string; historyFrom: string | n
 }
 
 export type AlertDetail = {
-  alert: AlertListRow & { subject_id: string; confidence: number | null; lat: number | null; lng: number | null; note: string | null; resolved_at: string | null; device: { name: string | null } | null };
+  alert: AlertListRow & { subject_id: string; confidence: number | null; lat: number | null; lng: number | null; accuracy_m: number | null; located_at: string | null; note: string | null; resolved_at: string | null; device: { name: string | null } | null };
   access: Access;
   canAct: boolean;
   hasSnapshot: boolean;
+  /** Every fix of the alert, oldest first, for the map trail. */
+  locations: { t: string; lat: number; lng: number; accuracy_m: number | null }[];
   events: { id: number; action: string; at: string; user: { name: string | null; email: string } | null }[];
   notified: { id: string; channel: string; status: string; recipient: { name: string | null; email: string } | null }[];
 };
@@ -62,7 +64,7 @@ export async function getAlertDetail(alertId: string, userId: string): Promise<A
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("alerts")
-    .select("id, subject_id, type, severity, status, detected_at, trigger, metrics, confidence, lat, lng, note, resolved_at, device:devices(name)")
+    .select("id, subject_id, type, severity, status, detected_at, trigger, metrics, confidence, lat, lng, accuracy_m, located_at, note, resolved_at, device:devices(name)")
     .eq("id", alertId)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -74,15 +76,17 @@ export async function getAlertDetail(alertId: string, userId: string): Promise<A
   if (access.historyFrom && Date.parse(alert.detected_at) < Date.parse(access.historyFrom)) return null;
 
   const privileged = access.self || access.role === "guardian";
-  const [events, notified, snap] = await Promise.all([
+  const [events, notified, snap, locs] = await Promise.all([
     db.from("alert_events").select("id, action, at, user_id, user:users(name, email)").eq("alert_id", alertId).order("at"),
     privileged
       ? db.from("notifications").select("id, channel, status, recipient:users!recipient_id(name, email)").eq("alert_id", alertId)
       : Promise.resolve({ data: [], error: null }),
     db.from("alert_snapshots").select("alert_id", { count: "exact", head: true }).eq("alert_id", alertId),
+    db.from("alert_locations").select("t, lat, lng, accuracy_m").eq("alert_id", alertId).order("t"),
   ]);
   if (events.error) throw new Error(events.error.message);
   if (notified.error) throw new Error(notified.error.message);
+  if (locs.error) throw new Error(locs.error.message);
 
   // Record that this person looked, once. It feeds the timeline relatives and the wearer rely on.
   const eventRows = events.data as unknown as (AlertDetail["events"][number] & { user_id: string | null })[];
@@ -95,6 +99,7 @@ export async function getAlertDetail(alertId: string, userId: string): Promise<A
     access,
     canAct: canAct(access),
     hasSnapshot: (snap.count ?? 0) > 0,
+    locations: locs.data as AlertDetail["locations"],
     events: eventRows,
     notified: notified.data as unknown as AlertDetail["notified"],
   };

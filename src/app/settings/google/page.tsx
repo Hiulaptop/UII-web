@@ -48,7 +48,7 @@ export default async function GoogleSettingsPage({ searchParams }: { searchParam
         <section className="bg-ash py-[60px]">
           <div className="mx-auto w-full max-w-[860px] space-y-5 px-5">
             {notice && (
-              <p role="status" className={`rounded-[12px] px-5 py-3 text-sm ${notice.tone === "ok" ? "bg-ivory" : "bg-canvas-white text-red-700"}`}>{notice.text}</p>
+              <p role="status" className={`rounded-[12px] px-5 py-3 text-sm ${notice.tone === "ok" ? "bg-ivory" : "bg-canvas-white text-emergency"}`}>{notice.text}</p>
             )}
 
             <div className={card}>
@@ -77,7 +77,7 @@ export default async function GoogleSettingsPage({ searchParams }: { searchParam
               )}
 
               {connection?.lastError && (
-                <p role="alert" className="mt-4 text-sm text-red-700">
+                <p role="alert" className="mt-4 text-sm text-emergency">
                   {connection.lastError === "reconnect"
                     ? "Google không còn cho UII truy cập. Hãy ngắt kết nối rồi kết nối lại."
                     : "Lần đồng bộ gần nhất bị lỗi. Bấm “Đồng bộ lại” để thử lần nữa."}

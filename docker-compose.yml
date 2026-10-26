@@ -6,7 +6,11 @@ services:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_WAITLIST_URL: ${NEXT_PUBLIC_WAITLIST_URL:-}
     env_file: .env
+    # Map data for the alert page (one PMTiles file, see docs/map-tiles.md). Read-only; the app works without it.
+    volumes:
+      - ${MAP_DATA_DIR:-./data/map}:/data/map:ro
     # Lets the container reach a gateway (9router) running on the Docker host via host.docker.internal.
     extra_hosts:
       - "host.docker.internal:host-gateway"

@@ -40,7 +40,7 @@ export function LinkForm() {
           {pending ? "Đang tạo…" : "Tạo mã QR mới"}
         </Button>
         {state?.error && (
-          <p role="alert" className="text-sm text-red-700">
+          <p role="alert" className="text-sm text-emergency">
             {state.error}
           </p>
         )}

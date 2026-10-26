@@ -119,7 +119,7 @@ export function ScheduleForm({ initial, today, calendarConnected }: { initial: S
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={pending}>{pending ? "Đang lưu…" : "Lưu lịch thuốc"}</Button>
           <Link href="/profile/medications" className={buttonVariants({ variant: "outline" })}>Hủy</Link>
-          {state?.error && <span role="alert" className="text-sm text-red-700">{state.error}</span>}
+          {state?.error && <span role="alert" className="text-sm text-emergency">{state.error}</span>}
         </div>
       </form>
 

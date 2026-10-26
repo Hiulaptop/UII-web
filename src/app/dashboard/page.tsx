@@ -42,7 +42,7 @@ const severityClass: Record<AlertSeverity, string> = {
   low: "bg-fog text-steel",
   medium: "bg-mist text-graphite",
   high: "bg-ivory text-brass",
-  critical: "bg-graphite text-white",
+  critical: "bg-alarm text-graphite",
 };
 
 const h2 = "font-heading text-[32px] leading-[1.19] tracking-[-0.02em]";

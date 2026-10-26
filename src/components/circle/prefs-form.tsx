@@ -77,7 +77,7 @@ export function PrefsForm({ item, mailEnabled }: { item: MyCirclePrefs; mailEnab
           </span>
         )}
         {state?.error && (
-          <span role="alert" className="text-sm text-red-700">
+          <span role="alert" className="text-sm text-emergency">
             {state.error}
           </span>
         )}

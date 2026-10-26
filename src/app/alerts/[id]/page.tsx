@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { AlertMapLazy } from "@/components/alerts/alert-map-lazy";
 import { SiteHeader } from "@/components/dashboard/site-header";
 import { Button } from "@/components/ui/button";
 import { getAlertDetail } from "@/lib/alerts";
@@ -16,7 +17,7 @@ const severityClass: Record<AlertSeverity, string> = {
   low: "bg-fog text-steel",
   medium: "bg-mist text-graphite",
   high: "bg-ivory text-brass",
-  critical: "bg-graphite text-white",
+  critical: "bg-alarm text-graphite",
 };
 const eventLabel: Record<string, string> = {
   viewed: "đã xem",
@@ -114,12 +115,23 @@ export default async function AlertDetailPage({ params, searchParams }: { params
               <div className="space-y-3 rounded-[20px] bg-canvas-white p-8 md:p-10">
                 <h2 className={h2}>Vị trí</h2>
                 {a.lat != null && a.lng != null ? (
-                  <p className="text-steel">
-                    {a.lat.toFixed(5)}, {a.lng.toFixed(5)} ·{" "}
-                    <a href={`https://www.google.com/maps?q=${a.lat},${a.lng}`} target="_blank" rel="noopener noreferrer" className="underline decoration-ember-orange decoration-1 underline-offset-[3px]">
-                      Mở bản đồ
-                    </a>
-                  </p>
+                  <div className="space-y-3">
+                    <AlertMapLazy
+                      points={
+                        d.locations.length
+                          ? d.locations
+                          : [{ t: a.located_at ?? a.detected_at, lat: a.lat, lng: a.lng, accuracy_m: a.accuracy_m }]
+                      }
+                    />
+                    <p className="text-steel">
+                      {a.lat.toFixed(5)}, {a.lng.toFixed(5)}
+                      {a.accuracy_m != null && ` · sai số khoảng ${Math.round(a.accuracy_m)} m`}
+                      {a.located_at && ` · cập nhật ${secFmt.format(new Date(a.located_at))}`} ·{" "}
+                      <a href={`https://www.google.com/maps?q=${a.lat},${a.lng}`} target="_blank" rel="noopener noreferrer" className="underline decoration-ember-orange decoration-1 underline-offset-[3px]">
+                        Mở bằng ứng dụng bản đồ
+                      </a>
+                    </p>
+                  </div>
                 ) : (
                   <p className="text-steel">Đồng hồ không gửi kèm vị trí.</p>
                 )}

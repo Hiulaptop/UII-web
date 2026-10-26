@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Minh họa: cổ tay đeo đồng hồ trước dãy núi lúc bình minh">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfe0f5"/>
+      <stop offset=".55" stop-color="#f7dcc4"/>
+      <stop offset="1" stop-color="#ffb877"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9b48f"/>
+      <stop offset="1" stop-color="#c98a64"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#sky)"/>
+  <circle cx="560" cy="520" r="90" fill="#ff830f" opacity=".85"/>
+  <path d="M0 560 L120 470 L210 520 L330 400 L430 480 L540 380 L660 470 L800 420 L800 1000 L0 1000Z" fill="#7d97c2"/>
+  <path d="M0 640 L90 580 L200 630 L300 540 L420 610 L520 560 L640 640 L800 590 L800 1000 L0 1000Z" fill="#3f63a3"/>
+  <path d="M0 740 L140 680 L260 720 L380 660 L520 730 L660 690 L800 730 L800 1000 L0 1000Z" fill="#052676"/>
+  <path d="M300 1000 C 360 880, 420 820, 470 760" fill="none" stroke="#f5f5f5" stroke-width="6" stroke-dasharray="14 14" opacity=".55"/>
+  <!-- forearm -->
+  <path d="M-40 1000 L-40 760 C 80 700, 260 640, 420 600 L470 700 C 320 760, 140 860, 40 1000Z" fill="url(#skin)"/>
+  <path d="M420 600 C 470 585, 520 590, 560 610 C 590 625, 600 660, 585 685 C 560 720, 510 715, 470 700Z" fill="#d79c76"/>
+  <!-- watch strap -->
+  <path d="M250 620 L330 595 L380 720 L300 750Z" fill="#202020"/>
+  <!-- watch body -->
+  <circle cx="315" cy="672" r="78" fill="#2a2f3a"/>
+  <circle cx="315" cy="672" r="64" fill="#000"/>
+  <circle cx="315" cy="672" r="56" fill="none" stroke="#17703f" stroke-width="6"/>
+  <text x="315" y="666" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#fff">Đang</text>
+  <text x="315" y="686" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#fff">theo dõi</text>
+</svg>

@@ -20,7 +20,7 @@ export async function exportUserData(userId: string) {
     db.from("circles").select("id, name, created_at, circle_members(role, status, joined_at, history_from, users(name, email))").eq("subject_id", userId),
     db.from("circle_members").select("role, status, joined_at, circles!inner(name, subject_id)").eq("user_id", userId).neq("circles.subject_id", userId),
     db.from("devices").select("id, name, model, platform, paired_at, last_seen_at, revoked_at").eq("user_id", userId),
-    db.from("alerts").select("id, type, severity, status, trigger, detected_at, resolved_at, note, metrics, alert_events(action, at, note)").eq("subject_id", userId).order("detected_at", { ascending: false }).limit(MAX_ALERTS),
+    db.from("alerts").select("id, type, severity, status, trigger, detected_at, resolved_at, note, metrics, lat, lng, accuracy_m, located_at, alert_locations(t, lat, lng, accuracy_m), alert_events(action, at, note)").eq("subject_id", userId).order("detected_at", { ascending: false }).limit(MAX_ALERTS),
     db.from("sos_access_tokens").select("id, created_at, expires_at, revoked_at, sos_access_logs(accessed_at, user_agent)").eq("user_id", userId),
     db.from("medication_schedules").select("name, dosage, times, days, start_date, end_date, remind, lead_minutes, created_at").eq("user_id", userId),
     db.from("medication_logs").select("scheduled_for, taken_at").eq("user_id", userId).order("scheduled_for", { ascending: false }).limit(5000),

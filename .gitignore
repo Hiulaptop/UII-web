@@ -45,3 +45,6 @@ next-env.d.ts
 
 # watch simulator state (holds a device token)
 .watch-sim.json
+
+# map tile archive (large; see docs/map-tiles.md)
+/data/
